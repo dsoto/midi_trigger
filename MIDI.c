@@ -93,12 +93,12 @@ void SetupHardware(void)
 	wdt_disable();
 
 	/* Disable clock division */
-	clock_prescale_set(clock_div_1);
+	//clock_prescale_set(clock_div_1);
 
 	/* Hardware Initialization */
-	Joystick_Init();
+	//Joystick_Init();
 	LEDs_Init();
-	Buttons_Init();
+	//Buttons_Init();
 	USB_Init();
 }
 
@@ -111,12 +111,14 @@ void CheckJoystickMovement(void)
 	uint8_t MIDIPitch;
 
 	/* Get current joystick mask, XOR with previous to detect joystick changes */
-	uint8_t JoystickStatus  = Joystick_GetStatus();
-	uint8_t JoystickChanges = (JoystickStatus ^ PrevJoystickStatus);
+	//uint8_t JoystickStatus  = Joystick_GetStatus();
+	//uint8_t JoystickChanges = (JoystickStatus ^ PrevJoystickStatus);
 
 	/* Get board button status - if pressed use channel 10 (percussion), otherwise use channel 1 */
-	uint8_t Channel = ((Buttons_GetStatus() & BUTTONS_BUTTON1) ? MIDI_CHANNEL(10) : MIDI_CHANNEL(1));
+	//uint8_t Channel = ((Buttons_GetStatus() & BUTTONS_BUTTON1) ? MIDI_CHANNEL(10) : MIDI_CHANNEL(1));
+    uint8_t Channel = MIDI_CHANNEL(10);
 
+    /*
 	if (JoystickChanges & JOY_LEFT)
 	{
 		MIDICommand = ((JoystickStatus & JOY_LEFT)? MIDI_COMMAND_NOTE_ON : MIDI_COMMAND_NOTE_OFF);
@@ -147,6 +149,9 @@ void CheckJoystickMovement(void)
 		MIDIPitch   = 0x3B;
 	}
 
+    */
+    MIDIPitch = 0x3B;
+
 	if (MIDICommand)
 	{
 		MIDI_EventPacket_t MIDIEvent = (MIDI_EventPacket_t)
@@ -163,7 +168,7 @@ void CheckJoystickMovement(void)
 		MIDI_Device_Flush(&Keyboard_MIDI_Interface);
 	}
 
-	PrevJoystickStatus = JoystickStatus;
+	//PrevJoystickStatus = JoystickStatus;
 }
 
 /** Event handler for the library USB Connection event. */
