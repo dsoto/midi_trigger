@@ -71,6 +71,8 @@ int main(void)
 	{
 		CheckJoystickMovement();
 
+        _delay_ms(1000);
+
 		MIDI_EventPacket_t ReceivedMIDIEvent;
 		while (MIDI_Device_ReceiveEventPacket(&Keyboard_MIDI_Interface, &ReceivedMIDIEvent))
 		{
@@ -151,6 +153,7 @@ void CheckJoystickMovement(void)
 
     */
     MIDIPitch = 0x3B;
+    MIDICommand = MIDI_COMMAND_NOTE_ON;
 
 	if (MIDICommand)
 	{
