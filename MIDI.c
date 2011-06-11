@@ -112,48 +112,24 @@ void CheckJoystickMovement(void)
 	uint8_t MIDICommand = 0;
 	uint8_t MIDIPitch;
 
-	/* Get current joystick mask, XOR with previous to detect joystick changes */
-	//uint8_t JoystickStatus  = Joystick_GetStatus();
-	//uint8_t JoystickChanges = (JoystickStatus ^ PrevJoystickStatus);
-
-	/* Get board button status - if pressed use channel 10 (percussion), otherwise use channel 1 */
-	//uint8_t Channel = ((Buttons_GetStatus() & BUTTONS_BUTTON1) ? MIDI_CHANNEL(10) : MIDI_CHANNEL(1));
     uint8_t Channel = MIDI_CHANNEL(10);
 
-    /*
-	if (JoystickChanges & JOY_LEFT)
-	{
-		MIDICommand = ((JoystickStatus & JOY_LEFT)? MIDI_COMMAND_NOTE_ON : MIDI_COMMAND_NOTE_OFF);
-		MIDIPitch   = 0x3C;
-	}
-
-	if (JoystickChanges & JOY_UP)
-	{
-		MIDICommand = ((JoystickStatus & JOY_UP)? MIDI_COMMAND_NOTE_ON : MIDI_COMMAND_NOTE_OFF);
-		MIDIPitch   = 0x3D;
-	}
-
-	if (JoystickChanges & JOY_RIGHT)
-	{
-		MIDICommand = ((JoystickStatus & JOY_RIGHT)? MIDI_COMMAND_NOTE_ON : MIDI_COMMAND_NOTE_OFF);
-		MIDIPitch   = 0x3E;
-	}
-
-	if (JoystickChanges & JOY_DOWN)
-	{
-		MIDICommand = ((JoystickStatus & JOY_DOWN)? MIDI_COMMAND_NOTE_ON : MIDI_COMMAND_NOTE_OFF);
-		MIDIPitch   = 0x3F;
-	}
-
-	if (JoystickChanges & JOY_PRESS)
-	{
-		MIDICommand = ((JoystickStatus & JOY_PRESS)? MIDI_COMMAND_NOTE_ON : MIDI_COMMAND_NOTE_OFF);
-		MIDIPitch   = 0x3B;
-	}
-
-    */
     MIDIPitch = 0x3B;
     MIDICommand = MIDI_COMMAND_NOTE_ON;
+
+    // check PD6 for voltage, if low, button hit and transfer note
+    // set PD6 to input
+    DDRD &= ~( 1 << 6);
+
+    DDRD = 0x00;
+
+    if (PIND & (1 << 6)){
+        // C1 = 0x24
+        MIDIPitch = 0x24;
+        MIDICommand = MIDI_COMMAND_NOTE_ON;
+    } else {
+    MIDICommand = 0;
+    }
 
 	if (MIDICommand)
 	{
@@ -171,7 +147,6 @@ void CheckJoystickMovement(void)
 		MIDI_Device_Flush(&Keyboard_MIDI_Interface);
 	}
 
-	//PrevJoystickStatus = JoystickStatus;
 }
 
 /** Event handler for the library USB Connection event. */
