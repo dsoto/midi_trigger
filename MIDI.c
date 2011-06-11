@@ -115,20 +115,25 @@ void CheckJoystickMovement(void)
     uint8_t Channel = MIDI_CHANNEL(10);
 
     MIDIPitch = 0x3B;
-    MIDICommand = MIDI_COMMAND_NOTE_ON;
+    MIDICommand = MIDI_COMMAND_NOTE_OFF;
 
     // check PD6 for voltage, if low, button hit and transfer note
     // set PD6 to input
-    DDRD &= ~( 1 << 6);
+    DDRD &= ~(1 << 6);
+    DDRD &= ~(1 << 5);
 
     DDRD = 0x00;
 
-    if (PIND & (1 << 6)){
-        // C1 = 0x24
-        MIDIPitch = 0x24;
+    if ((PIND & (1 << 6)) | (PIND & (1 << 5))) {
         MIDICommand = MIDI_COMMAND_NOTE_ON;
-    } else {
-    MIDICommand = 0;
+    }
+
+    if (PIND & (1 << 6)){
+        MIDIPitch = 0x24;
+    }
+    if (PIND & (1 << 5)){
+        // D1 = 0x24
+        MIDIPitch = 0x26;
     }
 
 	if (MIDICommand)
