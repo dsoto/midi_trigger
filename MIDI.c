@@ -71,7 +71,7 @@ int main(void)
 	{
 		CheckJoystickMovement();
 
-        _delay_ms(100);
+        _delay_ms(20);
 
 		MIDI_EventPacket_t ReceivedMIDIEvent;
 		while (MIDI_Device_ReceiveEventPacket(&Keyboard_MIDI_Interface, &ReceivedMIDIEvent))
@@ -108,6 +108,11 @@ void SetupHardware(void)
 void CheckJoystickMovement(void)
 {
 	static uint8_t PrevJoystickStatus;
+    static uint8_t prevKickState = 0;
+    static uint8_t currKickState = 0;
+    static uint8_t prevSnareState = 0;
+    static uint8_t currSnareState = 0;
+
 
 	uint8_t MIDICommand = 0;
 	uint8_t MIDIPitch;
@@ -119,20 +124,38 @@ void CheckJoystickMovement(void)
 
     // check PD6 for voltage, if low, button hit and transfer note
     // set PD6 to input
+
     DDRD &= ~(1 << 6);
     DDRD &= ~(1 << 5);
 
     DDRD = 0x00;
+    PORTD = 0xFF;
 
-    if ((PIND & (1 << 6)) | (PIND & (1 << 5))) {
+    if (~PIND & (1<< 6)) {
+        currKickState = 1;
+    } else {
+        currKickState = 0;
+    }
+
+    if (~PIND & (1<< 5)) {
+        currSnareState = 1;
+    } else {
+        currSnareState = 0;
+    }
+
+    if (prevKickState == 0 && currKickState == 1) {
         MIDICommand = MIDI_COMMAND_NOTE_ON;
     }
 
-    if (PIND & (1 << 6)){
+    if (prevSnareState == 0 && currSnareState == 1) {
+        MIDICommand = MIDI_COMMAND_NOTE_ON;
+    }
+
+    if (currKickState == 1){
         MIDIPitch = 0x24;
     }
-    if (PIND & (1 << 5)){
-        // D1 = 0x24
+
+    if (currSnareState == 1){
         MIDIPitch = 0x26;
     }
 
@@ -152,6 +175,8 @@ void CheckJoystickMovement(void)
 		MIDI_Device_Flush(&Keyboard_MIDI_Interface);
 	}
 
+	prevKickState = currKickState;
+    prevSnareState = currSnareState;
 }
 
 /** Event handler for the library USB Connection event. */
