@@ -516,7 +516,8 @@ gccversion :
 
 # Program the device.
 program: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
+	#$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
+	avrdude -c usbtiny -p at90usb82 -F -U flash:w:MIDI.hex
 
 flip: $(TARGET).hex
 	batchisp -hardware usb -device $(MCU) -operation erase f
