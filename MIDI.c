@@ -112,7 +112,8 @@ void CheckJoystickMovement(void)
     static uint8_t currKickState = 0;
     static uint8_t prevSnareState = 0;
     static uint8_t currSnareState = 0;
-
+    static uint8_t prevCymState = 0;
+    static uint8_t currCymState = 0;
 
 	uint8_t MIDICommand = 0;
 	uint8_t MIDIPitch;
@@ -127,20 +128,27 @@ void CheckJoystickMovement(void)
 
     DDRD &= ~(1 << 6);
     DDRD &= ~(1 << 5);
+    DDRD &= ~(1 << 4);
 
     DDRD = 0x00;
     PORTD = 0xFF;
 
-    if (~PIND & (1<< 6)) {
+    if (~PIND & (1<< 4)) {
         currKickState = 1;
     } else {
         currKickState = 0;
     }
 
-    if (~PIND & (1<< 5)) {
+    if (~PIND & (1<< 6)) {
         currSnareState = 1;
     } else {
         currSnareState = 0;
+    }
+
+    if (~PIND & (1<< 5)) {
+        currCymState = 1;
+    } else {
+        currCymState = 0;
     }
 
     if (prevKickState == 0 && currKickState == 1) {
@@ -151,12 +159,20 @@ void CheckJoystickMovement(void)
         MIDICommand = MIDI_COMMAND_NOTE_ON;
     }
 
+    if (prevCymState == 0 && currCymState == 1) {
+        MIDICommand = MIDI_COMMAND_NOTE_ON;
+    }
+
     if (currKickState == 1){
         MIDIPitch = 0x24;
     }
 
     if (currSnareState == 1){
         MIDIPitch = 0x26;
+    }
+
+    if (currCymState == 1){
+        MIDIPitch = 0x2A;
     }
 
 	if (MIDICommand)
@@ -177,6 +193,7 @@ void CheckJoystickMovement(void)
 
 	prevKickState = currKickState;
     prevSnareState = currSnareState;
+    prevCymState = currCymState;
 }
 
 /** Event handler for the library USB Connection event. */
