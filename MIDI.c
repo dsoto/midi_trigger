@@ -68,6 +68,10 @@ int main(void)
     DDRB = 1 << 4;
     PORTB = 0xFF;
 
+    // set entire port d to input to read button presses
+    DDRD = 0x00;
+
+
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	sei();
 
@@ -124,9 +128,8 @@ void CheckJoystickMovement(void) {
 	uint8_t MIDIPitch;
     uint8_t Channel = MIDI_CHANNEL(10);
 
-    // set entire port d to input
-    DDRD = 0x00;
     // enable pullup resistor
+    // i can't move this into the main routine for some reason i don't understand
     PORTD = 0xFF;
 
     // read pin d and shift to lowest 3 bits
