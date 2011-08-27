@@ -64,6 +64,14 @@ int main(void)
 {
 	SetupHardware();
 
+    // output LED
+    DDRB = 1 << 4;
+
+    // set entire port d to input
+    DDRD = 0x00;
+    // enable pullup resistor
+    PORTD = 0xFF;
+
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	sei();
 
@@ -71,7 +79,7 @@ int main(void)
 	{
 		CheckJoystickMovement();
 
-        _delay_ms(20);
+        _delay_ms(2500);
 
 		MIDI_EventPacket_t ReceivedMIDIEvent;
 		while (MIDI_Device_ReceiveEventPacket(&Keyboard_MIDI_Interface, &ReceivedMIDIEvent))
@@ -107,94 +115,69 @@ void SetupHardware(void)
 /** Checks for changes in the position of the board joystick, sending MIDI events to the host upon each change. */
 void CheckJoystickMovement(void)
 {
-	static uint8_t PrevJoystickStatus;
-    static uint8_t prevKickState = 0;
-    static uint8_t currKickState = 0;
-    static uint8_t prevSnareState = 0;
-    static uint8_t currSnareState = 0;
-    static uint8_t prevCymState = 0;
-    static uint8_t currCymState = 0;
+
+    static uint8_t currState = 0;
+    static uint8_t prevState = 0;
+    static uint8_t playState = 0;
+
+    // array of pitches
+    static int pitch[3] = {0x24, 0x26, 0x2A};
 
 	uint8_t MIDICommand = 0;
 	uint8_t MIDIPitch;
 
     uint8_t Channel = MIDI_CHANNEL(10);
 
-    MIDIPitch = 0x3B;
+    MIDIPitch = pitch[0];
     MIDICommand = MIDI_COMMAND_NOTE_OFF;
 
-    // check PD6 for voltage, if low, button hit and transfer note
-    // set PD6 to input
 
-    DDRD &= ~(1 << 6);
-    DDRD &= ~(1 << 5);
-    DDRD &= ~(1 << 4);
 
-    DDRD = 0x00;
-    PORTD = 0xFF;
+    // read pin d and shift to lowest 3 bits
+    // button press will pull state to low
+    currState = PIND >> 4;
 
-    if (~PIND & (1<< 4)) {
-        currKickState = 1;
-    } else {
-        currKickState = 0;
+    // play note if currState is true and prevState was false
+    playState = ~currState & prevState;
+
+    for (int i=0; i<=2; i++) {
+
+    PORTB = 0x00;
+    _delay_ms(200);
+    PORTB = 1 << 4;
+    }
     }
 
-    if (~PIND & (1<< 6)) {
-        currSnareState = 1;
-    } else {
-        currSnareState = 0;
+/*
+        if (playState & 1 << i) {
+
+
+            MIDICommand = MIDI_COMMAND_NOTE_ON;
+            MIDIPitch = pitch[i];
+        }
+        else {
+            //MIDICommand = 0;
+        }
+        //playState = playState >> 1;
+        if (MIDICommand) {
+            MIDI_EventPacket_t MIDIEvent = (MIDI_EventPacket_t)
+                {
+                    .CableNumber = 0,
+                    .Command     = (MIDICommand >> 4),
+
+                    .Data1       = MIDICommand | Channel,
+                    .Data2       = MIDIPitch,
+                    .Data3       = MIDI_STANDARD_VELOCITY,
+                };
+
+            MIDI_Device_SendEventPacket(&Keyboard_MIDI_Interface, &MIDIEvent);
+            MIDI_Device_Flush(&Keyboard_MIDI_Interface);
+        }
     }
-
-    if (~PIND & (1<< 5)) {
-        currCymState = 1;
-    } else {
-        currCymState = 0;
-    }
-
-    if (prevKickState == 0 && currKickState == 1) {
-        MIDICommand = MIDI_COMMAND_NOTE_ON;
-    }
-
-    if (prevSnareState == 0 && currSnareState == 1) {
-        MIDICommand = MIDI_COMMAND_NOTE_ON;
-    }
-
-    if (prevCymState == 0 && currCymState == 1) {
-        MIDICommand = MIDI_COMMAND_NOTE_ON;
-    }
-
-    if (currKickState == 1){
-        MIDIPitch = 0x24;
-    }
-
-    if (currSnareState == 1){
-        MIDIPitch = 0x26;
-    }
-
-    if (currCymState == 1){
-        MIDIPitch = 0x2A;
-    }
-
-	if (MIDICommand)
-	{
-		MIDI_EventPacket_t MIDIEvent = (MIDI_EventPacket_t)
-			{
-				.CableNumber = 0,
-				.Command     = (MIDICommand >> 4),
-
-				.Data1       = MIDICommand | Channel,
-				.Data2       = MIDIPitch,
-				.Data3       = MIDI_STANDARD_VELOCITY,
-			};
-
-		MIDI_Device_SendEventPacket(&Keyboard_MIDI_Interface, &MIDIEvent);
-		MIDI_Device_Flush(&Keyboard_MIDI_Interface);
-	}
-
-	prevKickState = currKickState;
-    prevSnareState = currSnareState;
-    prevCymState = currCymState;
+    prevState = currState;
+    currState = 0xFF;
 }
+*/
 
 /** Event handler for the library USB Connection event. */
 void EVENT_USB_Device_Connect(void)
