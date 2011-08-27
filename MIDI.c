@@ -65,9 +65,9 @@ int main(void)
 	SetupHardware();
 
 
-    // output LED
+    // output LED on 8u2 board on PB4
     DDRB = 1 << 4;
-    PORTD = 0xFF;
+    PORTB = 0xFF;
 
 
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
@@ -151,16 +151,8 @@ void CheckJoystickMovement(void)
         */
 
         if (playState & 1 << i) {
-            /*
-            PORTB = 0x00;
-            _delay_ms(200);
-            PORTB = 1 << 4;
-            _delay_ms(200);
-            */
             MIDICommand = MIDI_COMMAND_NOTE_ON;
             MIDIPitch = pitch[i];
-        }
-        if (MIDICommand) {
             MIDI_EventPacket_t MIDIEvent = (MIDI_EventPacket_t) {
                     .CableNumber = 0,
                     .Command     = (MIDICommand >> 4),
@@ -171,10 +163,13 @@ void CheckJoystickMovement(void)
             };
             MIDI_Device_SendEventPacket(&Keyboard_MIDI_Interface, &MIDIEvent);
             MIDI_Device_Flush(&Keyboard_MIDI_Interface);
+            PORTB = 0x00;
         }
     }
+    _delay_ms(10);
+    PORTB = 1 << 4;
     prevState = currState;
-    currState = 0xFF;
+    //currState = 0xFF;
 }
 
 
