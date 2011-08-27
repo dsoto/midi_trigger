@@ -64,13 +64,11 @@ int main(void)
 {
 	SetupHardware();
 
+
     // output LED
     DDRB = 1 << 4;
-
-    // set entire port d to input
-    DDRD = 0x00;
-    // enable pullup resistor
     PORTD = 0xFF;
+
 
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	sei();
@@ -79,7 +77,7 @@ int main(void)
 	{
 		CheckJoystickMovement();
 
-        _delay_ms(2500);
+        _delay_ms(20);
 
 		MIDI_EventPacket_t ReceivedMIDIEvent;
 		while (MIDI_Device_ReceiveEventPacket(&Keyboard_MIDI_Interface, &ReceivedMIDIEvent))
@@ -131,6 +129,10 @@ void CheckJoystickMovement(void)
     MIDIPitch = pitch[0];
     MIDICommand = MIDI_COMMAND_NOTE_OFF;
 
+    // set entire port d to input
+    DDRD = 0x00;
+    // enable pullup resistor
+    PORTD = 0xFF;
 
 
     // read pin d and shift to lowest 3 bits
@@ -141,35 +143,32 @@ void CheckJoystickMovement(void)
     playState = ~currState & prevState;
 
     for (int i=0; i<=2; i++) {
+        /*
+        PORTB = 0x00;
+        _delay_ms(200 * (i+1));
+        PORTB = 1 << 4;
+        _delay_ms(200 * (i+1));
+        */
 
-    PORTB = 0x00;
-    _delay_ms(200);
-    PORTB = 1 << 4;
-    }
-    }
-
-/*
         if (playState & 1 << i) {
-
-
+            /*
+            PORTB = 0x00;
+            _delay_ms(200);
+            PORTB = 1 << 4;
+            _delay_ms(200);
+            */
             MIDICommand = MIDI_COMMAND_NOTE_ON;
             MIDIPitch = pitch[i];
         }
-        else {
-            //MIDICommand = 0;
-        }
-        //playState = playState >> 1;
         if (MIDICommand) {
-            MIDI_EventPacket_t MIDIEvent = (MIDI_EventPacket_t)
-                {
+            MIDI_EventPacket_t MIDIEvent = (MIDI_EventPacket_t) {
                     .CableNumber = 0,
                     .Command     = (MIDICommand >> 4),
 
                     .Data1       = MIDICommand | Channel,
                     .Data2       = MIDIPitch,
                     .Data3       = MIDI_STANDARD_VELOCITY,
-                };
-
+            };
             MIDI_Device_SendEventPacket(&Keyboard_MIDI_Interface, &MIDIEvent);
             MIDI_Device_Flush(&Keyboard_MIDI_Interface);
         }
@@ -177,7 +176,7 @@ void CheckJoystickMovement(void)
     prevState = currState;
     currState = 0xFF;
 }
-*/
+
 
 /** Event handler for the library USB Connection event. */
 void EVENT_USB_Device_Connect(void)
