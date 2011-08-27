@@ -119,7 +119,7 @@ void CheckJoystickMovement(void)
     static uint8_t playState = 0;
 
     // array of pitches
-    static int pitch[3] = {0x24, 0x26, 0x2A};
+    static int pitch[3] = {0x24, 0x2A, 0x26};
 
 	uint8_t MIDICommand = 0;
 	uint8_t MIDIPitch;
