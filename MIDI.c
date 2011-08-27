@@ -64,20 +64,19 @@ int main(void)
 {
 	SetupHardware();
 
-
     // output LED on 8u2 board on PB4
     DDRB = 1 << 4;
     PORTB = 0xFF;
-
 
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	sei();
 
 	for (;;)
 	{
-		CheckJoystickMovement();
-
+        // polling interval for button presses
         _delay_ms(20);
+        // check botton press
+		CheckJoystickMovement();
 
 		MIDI_EventPacket_t ReceivedMIDIEvent;
 		while (MIDI_Device_ReceiveEventPacket(&Keyboard_MIDI_Interface, &ReceivedMIDIEvent))
@@ -111,45 +110,34 @@ void SetupHardware(void)
 }
 
 /** Checks for changes in the position of the board joystick, sending MIDI events to the host upon each change. */
-void CheckJoystickMovement(void)
-{
+void CheckJoystickMovement(void) {
 
+    // bottom three bits of each of these variables is the button press state
     static uint8_t currState = 0;
     static uint8_t prevState = 0;
     static uint8_t playState = 0;
 
-    // array of pitches
+    // array of pitches {kick, hi-hat, snare}
     static int pitch[3] = {0x24, 0x2A, 0x26};
 
 	uint8_t MIDICommand = 0;
 	uint8_t MIDIPitch;
-
     uint8_t Channel = MIDI_CHANNEL(10);
-
-    MIDIPitch = pitch[0];
-    MIDICommand = MIDI_COMMAND_NOTE_OFF;
 
     // set entire port d to input
     DDRD = 0x00;
     // enable pullup resistor
     PORTD = 0xFF;
 
-
     // read pin d and shift to lowest 3 bits
     // button press will pull state to low
     currState = PIND >> 4;
 
-    // play note if currState is true and prevState was false
+    // play note if currState is true (bit low) and prevState was false (bit high)
     playState = ~currState & prevState;
 
     for (int i=0; i<=2; i++) {
-        /*
-        PORTB = 0x00;
-        _delay_ms(200 * (i+1));
-        PORTB = 1 << 4;
-        _delay_ms(200 * (i+1));
-        */
-
+        // check i-th bit for button press
         if (playState & 1 << i) {
             MIDICommand = MIDI_COMMAND_NOTE_ON;
             MIDIPitch = pitch[i];
@@ -163,15 +151,17 @@ void CheckJoystickMovement(void)
             };
             MIDI_Device_SendEventPacket(&Keyboard_MIDI_Interface, &MIDIEvent);
             MIDI_Device_Flush(&Keyboard_MIDI_Interface);
+            // if button press pull LED pin low and light LED
             PORTB = 0x00;
         }
     }
+    // turn LED off
     _delay_ms(10);
     PORTB = 1 << 4;
-    prevState = currState;
-    //currState = 0xFF;
-}
 
+    // advance state of button press variables
+    prevState = currState;
+}
 
 /** Event handler for the library USB Connection event. */
 void EVENT_USB_Device_Connect(void)
